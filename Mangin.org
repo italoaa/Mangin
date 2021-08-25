@@ -1,0 +1,174 @@
+#+title: Mangin - Dot files Manager - 0.01
+#+PROPERTY: header-args:C :tangle ./Mangin.c :main no
+
+* Introduction
+This is a project to learn c nothing else, this is not certainly a tool to be more efficient due to the fact that issuing the commands is faster. Thanks and any feedback to help me learn is apreciated.
+
+*Mangin* is a cli tool to control and alter your dotfiles from anywhere in your computer.
+
+The first time you launch Mangin it should promt you for the path to your Stow directory.
+Example : =~/Dot/= or =~/.dotfiles/= 
+
+* Declarations
+
+** Preprocesors
+
+These are the preprocesors of the program
+#+begin_src C 
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#+end_src
+** Variables
+#+begin_src C 
+
+  const char dotdir[] = "~/Dot/";
+
+#+end_src
+** Functions
+#+begin_src C 
+
+void checkInput(char input);
+int stowPkg(char folder[], char pkg[]);
+int getPkg();
+void stowCmds();
+void unStow(char folder[], char pkg[]);
+
+#+end_src
+
+* Check Input
+This is the function that handles the input form the user.
+#+begin_src C :main no
+
+  void checkInput(char input) {
+    if (input == 'S') {
+
+      char pkg[50];
+      getPkg(); /* list the packages */
+      printf("What Package to stow? ");
+      scanf("%s", pkg);
+      stowPkg(dotdir, pkg);
+
+    } else if (input == 's') {
+
+      char cmd;
+      printf("What stow action to perform ( ? for help ) : ");
+      scanf("%s", &cmd);
+      if (cmd == 'd') {
+        char pkg[50];
+        getPkg();
+        printf("What Package to unStow? ");
+        scanf("%s", &pkg);
+        unStow(dotdir, pkg);
+      }else if (cmd == 'q') {
+        exit(1);
+      } else if (cmd == '?') {
+        stowCmds();
+      } else {
+        printf("Unrecongized Character : %c \n", cmd);
+      }
+    } else if (input == 'l') {
+      getPkg();
+    } else if (input == 'q') {
+      exit(0);
+    } else if (input == '?') {
+      printf("S - Stow [pkg_name]\ns - stow commands\nl - list the packages in the stow directory\nq - quit\n");
+    } else {
+      printf("Unrecognized Character %c \n", input);
+    }
+  }
+
+#+end_src
+
+* Utils
+** Print Packages
+This function is used as a util to list the packages available to the user
+#+begin_src C 
+
+  int getPkg() {
+    FILE *fp;
+    char pkg[1035];
+    /* Open the command for reading. */
+    char cmd[50];
+    sprintf(cmd, "cd %s ; ls -d */", dotdir);
+    fp = popen(cmd, "r");
+    if (fp == NULL) {
+      printf("Failed to run command\n");
+      exit(1);
+    }
+
+    /* Read the output a line at a time - output it. */
+    int counter = 0;
+    while (fgets(pkg, sizeof(pkg), fp) != NULL) {
+      printf("%d : %s", counter, pkg);
+      counter++;
+    }
+
+    /* close */
+    pclose(fp);
+    return 0;
+  }
+
+#+end_src
+
+* Commands
+** Stow
+This is the section that holds all the functions for the stow commands.
+*** Stow-Package
+#+begin_src C
+
+
+  int stowPkg(char folder[], char pkg[]) {
+    char chr;
+    char cmd[50];
+    sprintf(cmd, "cd %s;stow %s", folder, pkg);
+    printf("The command is : %s\n", cmd);
+    return 0;
+  }
+
+#+end_src
+
+#+RESULTS:
+
+*** Stow-Commands
+
+#+begin_src C 
+
+void stowCmds() {
+  printf("q - Quit\nd - Unstow\n");
+}
+
+#+end_src
+
+*** Unstow
+
+#+begin_src C 
+
+  void unStow(char folder[], char pkg[]) {
+    char cmd[50];
+    sprintf(cmd, "cd %s ; stow -D %s", folder, pkg);
+    printf("The command is : %s", cmd);
+  }
+
+#+end_src
+
+* Main loop
+This is the main function and starts a infinite loop that asks the user for input and invoes the =checkInput= function
+
+#+begin_src C 
+
+int main() {
+  printf("Hello! Thanks for trying Mangin. Remember that the purpose of this project is to start to learn the C programming language so if there are any bugs or improvements I would like for you to let me know\n");
+  while (1) {
+    char chr = 'x';
+    printf("Mangin prompt ( ? for help ) : ");
+    scanf("%c", &chr);
+    checkInput(chr);
+    scanf("%c", &chr);
+  }
+  return 0;
+}
+
+#+end_src
+
